@@ -1,0 +1,46 @@
+﻿@using CSALMongoWebAPI.Util
+
+@{
+    ViewBag.Title = "Students";
+}
+
+<!-- MAIN CONTENT -->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h3>All Students</h3>
+            <table id="all-students" class="table table-striped apply-data-table">
+                <thead>
+                    <tr>
+                        <th>Subject (User) ID</th>
+                        <th>Last Interaction</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in Model) {
+                        var lastTurnTime = student.LastTurnTime;
+                        if (lastTurnTime != null) {
+                            lastTurnTime = lastTurnTime.ToLocalTime();
+                        }
+                        
+                        <tr>
+                            <td><a href="~/home/studentdetails/@RenderHelp.URIEncode(student.UserID)" class="student-link">@student.UserID</a></td>
+                            <td class="nw">@lastTurnTime</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div> <!-- /container -->
+
+@section ScriptFinal {
+<script>
+    $(document).ready(function () {
+        $('.apply-data-table').dataTable({
+            "aaSorting": [] //No default sort
+        });
+        $(".student-link").addClass("hover-restore");
+    });
+</script>
+}

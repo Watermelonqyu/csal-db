@@ -1,0 +1,84 @@
+﻿@using CSALMongoWebAPI.Util
+
+@{    
+    ViewBag.Title = "Lessons";
+}
+
+<!-- MAIN CONTENT -->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h3>All Lessons</h3>
+            <table id="all-lessons" class="table table-striped apply-data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Number of students attempted</th>
+                        <th>Number of students completed</th>
+                        <th>
+                            <span class="has-tooltip" data-toggle="tooltip" data-placement="top" title="Based on each student's last attempt">
+                                Class Avg
+                            </span>
+                        </th>
+                        <th>Date of first attempted</th>
+                        <th>Date of last attempted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var lesson in Model.Lessons) {
+                        string firstAttempt = "N/A";
+                        string lastAttempt = "N/A";
+                        if (lesson.AttemptTimes != null) {
+                            var cnt = lesson.AttemptTimes.Count;
+                            if (cnt > 0) {
+                                firstAttempt = lesson.AttemptTimes[0].ToLocalTime().ToString();
+                                lastAttempt = lesson.AttemptTimes[cnt - 1].ToLocalTime().ToString();
+                            }
+                        }
+
+                        string correctDisp = "";
+                        string correctStyle = "";
+
+                        Tuple<int, int> tots;
+                        if (Model.AnswerTots.TryGetValue(lesson.LessonID, out tots)) {
+                            if (tots.Item1 > 0 || tots.Item2 > 0) {
+                                double all = tots.Item1 + tots.Item2;
+                                double avg = (double)tots.Item1 / all;
+                                correctDisp = String.Format("{0:P0}", avg);
+                                correctStyle = avg > 0.67 ? "label-success" : "label-danger";
+                            }
+                        }
+
+                        var name = lesson.ShortName;
+                        if (String.IsNullOrWhiteSpace(name)) {
+                            name = lesson.LessonID;
+                        }
+                        
+                        <tr>
+                            <td class="nw"><a href="~/home/lessondetails/@RenderHelp.URIEncode(lesson.LessonID)" class="lesson-link">@name</a></td>
+                            <td>@lesson.StudentsAttempted.Count</td>
+                            <td>@lesson.StudentsCompleted.Count</td>
+                            <td><span class="label @correctStyle" style="font-weight:normal;">@correctDisp</span></td>
+                            <td class="nw">@firstAttempt</td>
+                            <td class="nw">@lastAttempt</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div> <!-- /container -->
+
+@section ScriptFinal {
+<script>
+    $(document).ready(function () {
+        $(".has-tooltip").tooltip();
+
+        $('.apply-data-table').dataTable({
+            "aaSorting": [] //No default sort
+        });
+
+        $(".lesson-link").addClass("hover-restore");
+    });
+</script>
+}

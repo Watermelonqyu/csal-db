@@ -1,0 +1,135 @@
+﻿@using CSALMongoWebAPI.Util
+
+@{
+    ViewBag.Title = "Student " + Model.Student.UserID;
+}
+
+<!-- MAIN CONTENT -->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            @{
+                var completedCount = 0;
+                foreach (var lesson in Model.Turns) {
+                    if (lesson.LastCompleted()) {
+                        completedCount++;
+                    }
+                }
+            }
+            
+            Completed <strong>@completedCount</strong> of <strong>@Model.Turns.Count</strong> lessons attempted
+            <br />
+
+            <h3>Lesson Information</h3>
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Lesson Name</th>
+                        <th>Last Activity</th>
+                        <th>Times Attempted</th>
+                        <th>Times Completed</th>
+                        <th><span class="has-tooltip" data-toggle="tooltip" data-placement="top" title="Based on each student's last attempt">Score</span></th>
+                        <th><span class="has-tooltip" data-toggle="tooltip" data-placement="top" title="Based on each student's last attempt">Total time</span></th>
+                        <th><span class="has-tooltip" data-toggle="tooltip" data-placement="top" title="Based on each student's last attempt">Reading time</span></th>
+                        <th><span class="has-tooltip" data-toggle="tooltip" data-placement="top" title="Based on each student's last attempt">Lesson Path</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var lesson in Model.Turns) {
+                        string lessonID = lesson.LessonID;
+                        string lessonName;
+                        if (!Model.LessonLookup.TryGetValue(lessonID, out lessonName)) {
+                            lessonName = lessonID;
+                        }
+
+                        double correctRate = lesson.AdhocCorrectAnswerRate(0, lesson.TurnCount - 2, double.NaN);
+
+                        var lessonUrl = RenderHelp.URIEncode(lessonID);
+                        var userUrl = RenderHelp.URIEncode(lesson.UserID);
+
+                        var lastTurnTime = lesson.LastTurnTime;
+                        if (lastTurnTime != null) {
+                            lastTurnTime = lastTurnTime.ToLocalTime();
+                        }
+                        
+                        <tr>
+                            <td class="nw"><a href="~/home/lessondetails/@lessonUrl" class="lesson-link">@lessonName</a></td>
+                            <td class="nw">@lastTurnTime</td>
+                            <td>@lesson.Attempts</td>
+                            <td>
+                                @lesson.Completions
+                                @if (lesson.LastCompleted()) {
+                                    <span class="glyphicon glyphicon-ok"></span>
+                                }
+                            </td>
+                            <td class="correct-cell det-link" data-user="@userUrl" data-lesson="@lessonUrl">@correctRate</td>
+                            <td class="nw">@RenderHelp.HumanDuration(lesson.CurrentTotalTime())</td>
+                            <td class="nw">@RenderHelp.HumanDuration(lesson.CurrentReadingTime())</td>
+                            <td class="path-cell nw">@lesson.CurrentLessonPath()</td>
+                        </tr>                        
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <br/><br /><br />
+
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Readings Visited</h3>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>When</th>
+                        <th>Where</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var visit in Model.Student.ReadingURLs) {
+                        <tr>
+                            <td class="nw">@visit.VisitTime</td>
+                            <td class="nw">@visit.TargetURL</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div> <!-- /container -->
+
+@section ScriptFinal {
+    <script>
+        $(document).ready(function () {
+            //Do this before setting up the data table
+            $(".path-cell").each(function (idx, ele) {
+                var td = $(ele);
+                var path = td.text();
+                var newPath = CSALCommon.lessonPathMarkup(path);
+                td.html("").append(newPath);
+            });
+
+            $(".correct-cell").each(function (idx, ele) {
+                var td = $(ele);
+                var correct = td.text();
+                var newCorrect = CSALCommon.correctRateMarkup(correct);
+                td.html("").append(newCorrect);
+            });
+
+            $(".det-link").addClass("hover-restore").click(function (evt) {
+                evt.preventDefault();
+                var t = $(this);
+                showTurnDetail(t.data("lesson"), t.data("user"));
+            });
+
+            $(".has-tooltip").tooltip();
+
+            $('.apply-data-table').dataTable({
+                "aaSorting": [] //No default sort
+            });
+
+            $(".lesson-link").addClass("hover-restore");
+        });
+    </script>
+}

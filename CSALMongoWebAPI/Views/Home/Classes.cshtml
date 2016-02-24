@@ -1,0 +1,49 @@
+﻿@using CSALMongoWebAPI.Util
+
+@{
+    ViewBag.Title = "Classes";
+}
+
+<!-- MAIN CONTENT -->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <table id="all-classes" class="table table-striped apply-data-table">
+                <caption>All Classes</caption>
+                <thead>
+                    <tr>
+                        <th>Class ID</th>
+                        <th>Experiment Name</th>
+                        <th>Location</th>
+                        <th>Teacher</th>
+                        <th>Number Students</th>
+                        <th>Meet Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var clazz in Model) {
+                        <tr>
+                            <td><a href="~/home/classdetails/@RenderHelp.URIEncode(clazz.ClassID)" class="class-link">@clazz.ClassID</a></td>
+                            <td>@clazz.ExperimentName</td>
+                            <td>@clazz.Location</td>
+                            <td>@clazz.TeacherName</td>
+                            <td>@clazz.Students.Count</td>
+                            <td>@clazz.MeetingTime</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div> <!-- /container -->
+
+@section ScriptFinal {
+<script>
+    $(document).ready(function () {
+        $('.apply-data-table').dataTable({
+            "aaSorting": [] //No default sort
+        });
+        $(".class-link").addClass("hover-restore");
+    });
+</script>
+}
